@@ -41,11 +41,18 @@ export interface ComponentDefinition {
 export interface SystemDefinition {
   name: string;
   trigger?: SystemTrigger;
-  select?: string[];
+  select?: SelectRequirement[];
   statements: Statement[];
   when?: CollisionClause;
   location: SourceLocation;
 }
+
+export interface SelectRequirement {
+  componentName: string;
+  matchValue?: SelectValueExpression;
+}
+
+export type SelectValueExpression = NumberLiteral | StringLiteral | IdentifierLiteral;
 
 export type SystemTrigger =
   | { type: 'every-frame' }
@@ -154,4 +161,3 @@ export interface RuntimeWorldSummary {
   runningSystems: number;
   activeSprites: number;
 }
-

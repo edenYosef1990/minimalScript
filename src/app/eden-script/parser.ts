@@ -4,12 +4,16 @@ import {
   EntityDefinition,
   IdentifierLiteral,
   MutationStatement,
+  NumberLiteral,
   Program,
   ReferenceExpression,
   ResourceDefinition,
+  SelectRequirement,
+  SelectValueExpression,
   SourceLocation,
   SpawnStatement,
   Statement,
+  StringLiteral,
   SystemDefinition,
   ValueExpression
 } from './types';
@@ -190,8 +194,8 @@ function parseSystem(context: ParseContext, headerLine: ParsedLine): SystemDefin
     if (selectMatch) {
       system.select = selectMatch[1]
         .split(',')
-        .map((item) => item.trim())
-        .filter(Boolean);
+        .map((item) => parseSelectRequirement(item.trim(), context.diagnostics, line))
+        .filter((item): item is SelectRequirement => item !== null);
       context.index += 1;
       continue;
     }
@@ -214,6 +218,62 @@ function parseSystem(context: ParseContext, headerLine: ParsedLine): SystemDefin
   }
 
   return system;
+}
+
+function parseSelectRequirement(
+  rawRequirement: string,
+  diagnostics: CompileDiagnostic[],
+  line: ParsedLine
+): SelectRequirement | null {
+  const match = /^([A-Za-z_]\w*)(?:\s+(.+))?$/.exec(rawRequirement);
+  if (!match) {
+    pushDiagnostic(diagnostics, 'error', `Invalid select clause: "${rawRequirement}"`, locationOf(line, 1));
+    return null;
+  }
+
+  const matchValue = match[2]?.trim();
+  if (!matchValue) {
+    return {
+      componentName: match[1]
+    };
+  }
+
+  const parsedValue = parseSelectValueExpression(matchValue);
+  if (!parsedValue) {
+    pushDiagnostic(diagnostics, 'error', `Invalid select filter value: "${matchValue}"`, locationOf(line, 1));
+    return null;
+  }
+
+  return {
+    componentName: match[1],
+    matchValue: parsedValue
+  };
+}
+
+function parseSelectValueExpression(rawValue: string): SelectValueExpression | null {
+  if (/^-?[0-9]+(?:\.[0-9]+)?$/.test(rawValue)) {
+    return {
+      kind: 'number',
+      value: Number(rawValue)
+    } satisfies NumberLiteral;
+  }
+
+  const stringMatch = /^"([^"]+)"$/.exec(rawValue);
+  if (stringMatch) {
+    return {
+      kind: 'string',
+      value: stringMatch[1]
+    } satisfies StringLiteral;
+  }
+
+  if (/^[A-Za-z_][\w-]*$/.test(rawValue)) {
+    return {
+      kind: 'identifier',
+      value: rawValue
+    } satisfies IdentifierLiteral;
+  }
+
+  return null;
 }
 
 function parseStatement(context: ParseContext, line: ParsedLine): Statement | null {
@@ -465,4 +525,3 @@ function locationOf(line: ParsedLine, column: number): SourceLocation {
     column
   };
 }
-

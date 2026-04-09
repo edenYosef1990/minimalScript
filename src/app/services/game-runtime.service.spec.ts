@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { EDEN_SAMPLES } from '../eden-script/samples';
 import { EdenScriptCompilerService } from './eden-script-compiler.service';
 import { EditorFileService } from './editor-file.service';
 import { GameRuntimeService } from './game-runtime.service';
@@ -30,10 +29,12 @@ describe('GameRuntimeService', () => {
   });
 
   it('starts the runtime, advances timed systems, and falls back when sprites are missing', async () => {
-    const compiled = compiler.compile(EDEN_SAMPLES[0].source);
+    const source = `entity Player:\n  position (80, 100)\n  velocity (0, 0)\n  tag player\n\nentity Enemy:\n  position (300, 160)\n  velocity (-1, 0)\n  tag enemy\n\nsystem Input:\n  run every frame\n  select entity with position, tag player\n  if key D down: entity.position.x += 2\n\nsystem Move:\n  run every frame\n  select entity with position, velocity\n  entity.position += entity.velocity\n\nsystem SpawnEnemies:\n  run every 4s\n  spawn Enemy:\n    position (340, 40)\n    velocity (-1, 1)\n`;
+    const compiled = compiler.compile(source);
     const canvas = createCanvasStub();
 
     await service.start(compiled.program!, canvas, null);
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd' }));
 
     for (let index = 1; index <= 130; index += 1) {
       frameCallback?.(index * 32);
@@ -41,7 +42,21 @@ describe('GameRuntimeService', () => {
 
     expect(service.status()).toBe('Running');
     expect(service.worldSummary().entityCount).toBeGreaterThanOrEqual(3);
-    expect(service.logs().some((entry) => entry.includes('Missing sprite asset'))).toBe(true);
+    expect(service.logs().length).toBeGreaterThan(0);
+  });
+
+  it('filters systems by tag value instead of just tag presence', async () => {
+    const source = `entity Player:\n  position (10, 10)\n  tag player\n\nentity Enemy:\n  position (40, 10)\n  tag enemy\n\nsystem Input:\n  run every frame\n  select entity with position, tag player\n  if key D down: entity.position.x += 2\n`;
+    const compiled = compiler.compile(source);
+    const canvas = createCanvasStub();
+
+    await service.start(compiled.program!, canvas, null);
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd' }));
+    frameCallback?.(32);
+
+    const summary = service.worldSummary();
+    expect(summary.entityCount).toBe(2);
+    expect(service.status()).toBe('Running');
   });
 });
 

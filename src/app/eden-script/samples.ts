@@ -30,7 +30,7 @@ entity Enemy:
 
 system Input:
   run every frame
-  select entity with position, tag
+  select entity with position, tag player
   if key W down: entity.position.y -= 2
   if key S down: entity.position.y += 2
   if key A down: entity.position.x -= 2

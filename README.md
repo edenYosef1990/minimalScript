@@ -116,8 +116,7 @@ entity Player:
 
 system Input:
   run every frame
-  select entity with position, tag
-  if key W down: entity.position.y -= 2
+  select entity with position, tag player`r`n  if key W down: entity.position.y -= 2
   if key S down: entity.position.y += 2
   if key A down: entity.position.x -= 2
   if key D down: entity.position.x += 2
@@ -220,3 +219,4 @@ npm.cmd run test
 
 - The README describes both the language idea and the subset the current app actually runs.
 - If you expand the language later, update both `edenScript_spec.md` and this README so the docs stay aligned.
+

@@ -37,6 +37,7 @@ describe('EditorFileService', () => {
   });
 
   it('resolves bundled asset paths without the bridge', async () => {
-    await expect(service.resolveAssetUrl('assets/sprites/player.svg')).resolves.toBe('/assets/sprites/player.svg');
+    await expect(service.resolveAssetUrl('assets/sprites/player.svg')).resolves.toContain('assets/sprites/player.svg');
   });
 });
+

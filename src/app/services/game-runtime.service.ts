@@ -8,6 +8,8 @@ import {
   RuntimeValue,
   RuntimeVector,
   RuntimeWorldSummary,
+  SelectRequirement,
+  SelectValueExpression,
   Statement,
   SystemDefinition,
   ValueExpression
@@ -155,13 +157,37 @@ export class GameRuntimeService {
 
   private executeSystem(system: SystemDefinition): void {
     const targets = system.select?.length
-      ? this.entities.filter((entity) => system.select!.every((componentName) => componentName in entity.components))
+      ? this.entities.filter((entity) => system.select!.every((requirement) => this.matchesRequirement(entity, requirement)))
       : [undefined];
 
     for (const target of targets) {
       for (const statement of system.statements) {
         this.executeStatement(statement, target);
       }
+    }
+  }
+
+  private matchesRequirement(entity: RuntimeEntity, requirement: SelectRequirement): boolean {
+    const componentValue = entity.components[requirement.componentName];
+    if (componentValue === undefined) {
+      return false;
+    }
+
+    if (!requirement.matchValue) {
+      return true;
+    }
+
+    return componentValue === this.evaluateSelectValue(requirement.matchValue);
+  }
+
+  private evaluateSelectValue(expression: SelectValueExpression): RuntimeValue {
+    switch (expression.kind) {
+      case 'number':
+        return expression.value;
+      case 'string':
+        return expression.value;
+      case 'identifier':
+        return expression.value;
     }
   }
 
@@ -457,4 +483,3 @@ function drawFallbackEntity(ctx: CanvasRenderingContext2D, entity: RuntimeEntity
   ctx.lineWidth = 2;
   ctx.strokeRect(position.x, position.y, 36, 36);
 }
-
