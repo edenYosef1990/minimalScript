@@ -1,0 +1,88 @@
+<div class="shell">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">EdenScript Desktop Sandbox</p>
+      <h1>Write ECS game code on the left, play it on the right.</h1>
+    </div>
+
+    <div class="toolbar">
+      <button type="button" (click)="newFile()">New</button>
+      <button type="button" (click)="openFile()">Open</button>
+      <button type="button" (click)="saveFile()">Save</button>
+      <button type="button" class="secondary" (click)="insertAssetPath()">Pick Asset</button>
+      <button type="button" class="run" (click)="run()">Run</button>
+      <button type="button" class="secondary" (click)="stop()">Stop</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="panel editor-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Editor</h2>
+          <p>Monaco-powered, single-file EdenScript playground.</p>
+        </div>
+
+        <label class="sample-picker">
+          <span>Sample</span>
+          <select [ngModel]="selectedSampleId()" (ngModelChange)="loadSample($event)">
+            <option *ngFor="let sample of samples" [ngValue]="sample.id">{{ sample.name }}</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="editor-frame">
+        <app-code-editor [value]="source()" (valueChange)="onSourceChanged($event)"></app-code-editor>
+      </div>
+
+      <div class="diagnostics">
+        <div class="diagnostics-header">
+          <h3>Diagnostics</h3>
+          <span>{{ diagnosticsSummary() }}</span>
+        </div>
+
+        <div class="diagnostic-list" *ngIf="diagnostics().length; else emptyDiagnostics">
+          <article
+            *ngFor="let diagnostic of diagnostics(); trackBy: trackDiagnostic"
+            class="diagnostic-item"
+            [class.warning]="diagnostic.severity === 'warning'"
+            [class.error]="diagnostic.severity === 'error'"
+          >
+            <strong>{{ diagnostic.severity | titlecase }}</strong>
+            <span>Line {{ diagnostic.location.line }}:{{ diagnostic.location.column }}</span>
+            <p>{{ diagnostic.message }}</p>
+          </article>
+        </div>
+
+        <ng-template #emptyDiagnostics>
+          <p class="empty-state">No compile diagnostics yet.</p>
+        </ng-template>
+      </div>
+    </section>
+
+    <section class="panel preview-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Preview</h2>
+          <p>{{ statusMessage() }}</p>
+        </div>
+
+        <div class="runtime-stats">
+          <span>{{ runtime.status() }}</span>
+          <span>{{ runtime.worldSummary().entityCount }} entities</span>
+          <span>{{ runtime.worldSummary().runningSystems }} systems</span>
+          <span>{{ runtime.worldSummary().activeSprites }} sprites</span>
+        </div>
+      </div>
+
+      <div class="canvas-shell">
+        <canvas #previewCanvas class="preview-canvas"></canvas>
+      </div>
+
+      <div class="logs">
+        <h3>Runtime Log</h3>
+        <p *ngFor="let entry of runtime.logs()">{{ entry }}</p>
+      </div>
+    </section>
+  </main>
+</div>

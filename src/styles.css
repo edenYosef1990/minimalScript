@@ -1,0 +1,29 @@
+:root {
+  color-scheme: dark;
+  font-family: 'Segoe UI', 'Inter', sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(83, 157, 255, 0.18), transparent 30%),
+    linear-gradient(180deg, #10172b 0%, #060a14 100%);
+  color: #e5eefc;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: transparent;
+}
+
+body {
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+select {
+  font: inherit;
+}
+
